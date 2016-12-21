@@ -64,8 +64,26 @@ class Perception:
     def getW(self):
         return self.w
 
+    def output(self, data):
+        # 乘出来的结果是一个1行1列的矩阵，所以用[0,0]取其中元素
+        y_hat = self.TF((data * self.w)[0, 0])
+        return y_hat
+
+    def computeError_o(self, y_hat, label):
+        # 输出层的步骤，计算误差并回传
+        error = EF(label, y_hat)
+        return error
+
+    def computeError_h(self, y_hat, weights, errors):
+        # 隐藏层的计算误差
+        # weights是与下一层节点连接的权重，errors是对应的误差
+        error = 0
+        for i in range(len(weights)):
+            error += weights[i] * errors[i]
+        return y_hat * (1 - y_hat) * error
+
     # 需要改动
-    def update(self, data, label):
+    def updateW(self, label):
         # 给出一组数据和该组数据的label，进行更新
         # 乘出来的结果是一个1行1列的矩阵，所以用[0,0]取其中元素
         y_hat = self.TF((data * self.w)[0, 0])
@@ -91,7 +109,8 @@ class Perception:
             is_update = False
 
             for j in range(len(self.dataset)):
-                is_update = self.update(self.dataset[j], self.label[j]) or is_update
+                is_update = self.update(
+                    self.dataset[j], self.label[j]) or is_update
             '''
             j=randint(0,3)
             is_update = self.update(self.dataset[j],self.label[j]) or is_update
@@ -134,7 +153,28 @@ def error1(label, y):
 def sig_error(label, y):
     return y * (1 - y) * (label - y)
 
+'''
 p = Perception(1,sigmoid,0.9,0,sig_error)
 p.getData("data.txt")
 p.changeW([0.1,-0.3,-0.2])
 p.compute()
+'''
+
+
+class BPnetwork:
+
+    def __init__(self, inputnum, hiddennum, outputnum):
+        self.inputnum = inputnum
+        self.hiddennum = hiddennum
+        self.outputnum = outputnum
+        self.hidden_layer=[]
+        self.output_layer=[]
+        self.data=[1,0,1]
+        for i in range(hiddennum):
+            self.hidden_layer.append(Perception(100,sigmoid,0.9,0,sig_error))
+        for i in range(outputnum):
+            self.output_layer.append(Perception(1,sigmoid,0.9,0,sig_error))
+
+    def compute(self):
+        for p in hidden_layer:
+            p.output(self.data)
